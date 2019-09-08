@@ -3,9 +3,9 @@ package org.graph.pathfinder;
 import java.util.List;
 import lombok.val;
 import org.graph.pathfinder.directed.SimpleDigraph;
-import org.graph.pathfinder.exceptions.EdgeDuplicateException;
 import org.graph.pathfinder.exceptions.LoopEdgeException;
-import org.graph.pathfinder.undirected.UndirectedGraph;
+import org.graph.pathfinder.strategy.DijkstraPathFinderStrategy;
+import org.graph.pathfinder.undirected.SimpleBiDirectionalDigraph;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,30 +21,34 @@ import static org.junit.jupiter.api.Assertions.*;
 class CommonGraphTests {
 
     @TestFactory
-    static List<GraphWithPathfinder> graphItems() {
-        return List.of(new UndirectedGraph(), new SimpleDigraph());
+    static List<MutableGraph> graphItems() {
+        return List.of(new SimpleBiDirectionalDigraph(), new SimpleDigraph());
     }
 
     @ParameterizedTest
     @MethodSource("graphItems")
     @DisplayName("find the only way in connected graph")
-    void testGetTheOnlyPath(GraphWithPathfinder graph) {
-        val v0 = graph.addVertex();
-        val v1 = graph.addVertex();
-        val v2 = graph.addVertex();
-        val v3 = graph.addVertex();
-        val v4 = graph.addVertex();
-        val v5 = graph.addVertex();
-        val v6 = graph.addVertex();
+    void testGetTheOnlyPath(MutableGraph graph) {
+        val v0 = new Vertex();
+        val v1 = new Vertex();
+        val v2 = new Vertex();
+        val v3 = new Vertex();
+        val v4 = new Vertex();
+        val v5 = new Vertex();
+        val v6 = new Vertex();
 
-        val edge0_1 = graph.addEdge(v0, v1);
-        val edge1_2 = graph.addEdge(v1, v2);
-        val edge1_3 = graph.addEdge(v1, v3);
-        val edge2_4 = graph.addEdge(v2, v4);
-        val edge4_5 = graph.addEdge(v4, v5);
-        val edge3_6 = graph.addEdge(v3, v6);
+        val edge0_1 = new Edge(v0, v1);
+        graph.addEdge(edge0_1);
+        val edge1_2 = new Edge(v1, v2);
+        graph.addEdge(edge1_2);
+        graph.addEdge(new Edge(v1, v3));
+        val edge2_4 = new Edge(v2, v4);
+        graph.addEdge(edge2_4);
+        val edge4_5 = new Edge(v4, v5);
+        graph.addEdge(edge4_5);
+        graph.addEdge(new Edge(v3, v6));
 
-        val theOnlyPath = graph.getPath(v0, v5);
+        val theOnlyPath = DijkstraPathFinderStrategy.on(graph).getPath(v0, v5);
         assertNotNull(theOnlyPath);
 
         assertEquals(4, theOnlyPath.size());
@@ -57,22 +61,22 @@ class CommonGraphTests {
     @ParameterizedTest
     @MethodSource("graphItems")
     @DisplayName("find the only way in connected undirected graph")
-    void testGetTheNoPath(GraphWithPathfinder graph) {
-        val v0 = graph.addVertex();
-        val v1 = graph.addVertex();
-        val v2 = graph.addVertex();
-        val v3 = graph.addVertex();
-        val v4 = graph.addVertex();
-        val v5 = graph.addVertex();
-        val v6 = graph.addVertex();
+    void testGetTheNoPath(MutableGraph graph) {
+        val v0 = new Vertex();
+        val v1 = new Vertex();
+        val v2 = new Vertex();
+        val v3 = new Vertex();
+        val v4 = new Vertex();
+        val v5 = new Vertex();
+        val v6 = new Vertex();
 
-        val edge0_2 = graph.addEdge(v0, v2);
-        val edge2_4 = graph.addEdge(v2, v4);
-        val edge4_6 = graph.addEdge(v4, v6);
-        val edge1_3 = graph.addEdge(v1, v3);
-        val edge3_5 = graph.addEdge(v3, v5);
+        graph.addEdge(new Edge(v0, v2));
+        graph.addEdge(new Edge(v2, v4));
+        graph.addEdge(new Edge(v4, v6));
+        graph.addEdge(new Edge(v1, v3));
+        graph.addEdge(new Edge(v3, v5));
 
-        val noPath = graph.getPath(v0, v5);
+        val noPath = DijkstraPathFinderStrategy.on(graph).getPath(v0, v5);
         assertNotNull(noPath);
         assertTrue(noPath.isEmpty());
     }
@@ -80,23 +84,23 @@ class CommonGraphTests {
     @ParameterizedTest
     @MethodSource("graphItems")
     @DisplayName("Loop check")
-    void testLoopCheck(GraphWithPathfinder graph) {
-//        val graph = new UndirectedGraph();
-        val v0 = graph.addVertex();
-
-        assertThrows(LoopEdgeException.class, () -> graph.addEdge(v0, v0));
+    void testLoopCheck(MutableGraph graph) {
+        val v0 = new Vertex();
+        assertThrows(LoopEdgeException.class, () -> graph.addEdge(new Edge(v0, v0)));
 
     }
 
     @ParameterizedTest
     @MethodSource("graphItems")
     @DisplayName("Multiple edge verification check")
-    void testMultipleEdgeCheck(GraphWithPathfinder graph) {
-        val v0 = graph.addVertex();
-        val v1 = graph.addVertex();
+    void testMultipleEdgeCheck(MutableGraph graph) {
+        val v0 = new Vertex();
+        val v1 = new Vertex();
+        graph.addEdge(new Edge(v0, v1));
 
-        assertNotNull(graph.addEdge(v0, v1));
-        assertThrows(EdgeDuplicateException.class, () -> graph.addEdge(v0, v0));
+        assertNotNull(graph.getEdges());
+        assertFalse(graph.getEdges().isEmpty());
+        assertThrows(LoopEdgeException.class, () -> graph.addEdge(new Edge(v0, v0)));
     }
 
 }

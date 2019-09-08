@@ -1,36 +1,37 @@
 package org.graph.pathfinder.directed;
 
-import java.util.List;
-import lombok.NonNull;
+import java.util.HashSet;
+import java.util.Set;
 import org.graph.pathfinder.Edge;
-import org.graph.pathfinder.GraphWithPathfinder;
-import org.graph.pathfinder.Vertex;
+import org.graph.pathfinder.MutableGraph;
+import org.graph.pathfinder.exceptions.EdgeDuplicateException;
 import org.graph.pathfinder.exceptions.GraphException;
+import org.graph.pathfinder.exceptions.LoopEdgeException;
 
 /**
+ * Is not thread-safe use {@link org.graph.pathfinder.concurrent.ReadWriteSafeMutableGraph} wrapper.
+ * 
  * @author Andrew.Arefyev@gmail.com
  * Date: 04.09.2019
- * Time: 3:03
  */
-public class SimpleDigraph implements GraphWithPathfinder {
-    @Override
-    public @NonNull Vertex addVertex() {
-        return null;
-    }
+public class SimpleDigraph implements MutableGraph {
+    private Set<Edge> edges = new HashSet<>();
 
     /**
      *
-     * @param source source point
-     * @param destination destination point
-     * @return
+     * @param edge directed edge
+     * @throws LoopEdgeException on a loop edged
+     * @throws EdgeDuplicateException on a repeated edge
      */
     @Override
-    public @NonNull Edge addEdge(final Vertex source, final Vertex destination) throws GraphException {
-        return null;
+    public void addEdge(Edge edge) throws GraphException {
+        if (edge.getSource() == edge.getDestination()) throw new LoopEdgeException();
+        if (edges.contains(edge)) throw new EdgeDuplicateException();
+        edges.add(edge);
     }
 
     @Override
-    public @NonNull List<Edge> getPath(final Vertex source, final Vertex destination) {
-        return null;
+    public Set<Edge> getEdges() {
+        return Set.copyOf(edges);
     }
 }

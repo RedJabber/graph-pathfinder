@@ -1,7 +1,9 @@
 package org.graph.pathfinder;
 
+import lombok.NonNull;
 import lombok.val;
 import org.graph.pathfinder.directed.SimpleDigraph;
+import org.graph.pathfinder.strategy.DijkstraPathFinderStrategy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,58 +17,70 @@ import static org.junit.jupiter.api.Assertions.*;
 class SimpleDigraphTest {
 
     @Test
-    @DisplayName("find the only way in connected directed graph")
-    static void testGetTheOnlyPath() {
+    @DisplayName("find the best way in connected directed graph")
+    void testGetTheBestPath() {
         val graph = new SimpleDigraph();
-        val v0 = graph.addVertex();
-        val v1 = graph.addVertex();
-        val v2 = graph.addVertex();
-        val v3 = graph.addVertex();
-        val v4 = graph.addVertex();
-        val v5 = graph.addVertex();
-        val v6 = graph.addVertex();
+        val v0 = new Vertex();
+        val v1 = new Vertex();
+        val v2 = new Vertex();
+        val v3 = new Vertex();
+        val v4 = new Vertex();
+        val v5 = new Vertex();
+        val v6 = new Vertex();
 
-        val edge0_1 = graph.addEdge(v0, v1);
-        val edge2_4 = graph.addEdge(v2, v4);
-        val edge1_2 = graph.addEdge(v1, v2);
-        val edge4_5 = graph.addEdge(v4, v5);
-        graph.addEdge(v1, v3);
-        graph.addEdge(v3, v6);
+        graph.addEdge(new Edge(v0, v1));
+        graph.addEdge(new Edge(v0, v3, 4));
 
-        val theOnlyPath = graph.getPath(v0, v5);
+        graph.addEdge(new Edge(v1, v2));
+        graph.addEdge(new Edge(v1, v3, 3));
+
+        graph.addEdge(new Edge(v2, v3));
+        graph.addEdge(new Edge(v2, v4, 3));
+
+        graph.addEdge(new Edge(v3, v4));
+        graph.addEdge(new Edge(v4, v5));
+        graph.addEdge(new Edge(v3, v6));
+
+        val theOnlyPath = DijkstraPathFinderStrategy.on(graph).getPath(v0, v5);
         assertNotNull(theOnlyPath);
 
-        assertEquals(4, theOnlyPath.size());
-        assertEquals(edge0_1, theOnlyPath.get(0));
-        assertEquals(edge1_2, theOnlyPath.get(1));
-        assertEquals(edge2_4, theOnlyPath.get(2));
-        assertEquals(edge4_5, theOnlyPath.get(3));
+        assertEquals(5, theOnlyPath.size());
+        assertEdgeVectorEqual(v0, v1, theOnlyPath.get(0));
+        assertEdgeVectorEqual(v1, v2, theOnlyPath.get(1));
+        assertEdgeVectorEqual(v2, v3, theOnlyPath.get(2));
+        assertEdgeVectorEqual(v3, v4, theOnlyPath.get(3));
+        assertEdgeVectorEqual(v4, v5, theOnlyPath.get(4));
+    }
+
+    public static void assertEdgeVectorEqual(final @NonNull Vertex source, final @NonNull Vertex destination, Edge edge) {
+        assertEquals(source, edge.getSource(), "Edge source mismatch");
+        assertEquals(destination, edge.getDestination(), "Edge destination mismatch");
     }
 
     @Test
-    @DisplayName("find the only way in connected undirected graph")
+    @DisplayName("no path")
     void testGetWhenNoPath() {
         val graph = new SimpleDigraph();
-        val v0 = graph.addVertex();
-        val v1 = graph.addVertex();
-        val v2 = graph.addVertex();
-        val v3 = graph.addVertex();
-        val v4 = graph.addVertex();
-        val v5 = graph.addVertex();
-        val v6 = graph.addVertex();
+        val v0 = new Vertex();
+        val v2 = new Vertex();
+        val v3 = new Vertex();
+        val v4 = new Vertex();
+        val v5 = new Vertex();
 
-        val edge0_2 = graph.addEdge(v0, v2);
-        val edge2_4 = graph.addEdge(v2, v4);
-        val edge4_6 = graph.addEdge(v4, v6);
-        val edge1_3 = graph.addEdge(v1, v3);
-        val edge3_5 = graph.addEdge(v3, v5);
+        graph.addEdge(new Edge(v0, v2, 1));
+        graph.addEdge(new Edge(v2, v4));
+        graph.addEdge(new Edge(v4, new Vertex()));
+        graph.addEdge(new Edge(new Vertex(), v3));
+        graph.addEdge(new Edge(v3, v5));
 
-        val noPath = graph.getPath(v0, v5);
+        val noPath = DijkstraPathFinderStrategy.on(graph).getPath(v0, v5);
         assertNotNull(noPath);
         assertTrue(noPath.isEmpty());
+
+        val noPath1 = DijkstraPathFinderStrategy.on(graph).getPath(v4, v0);
+        assertNotNull(noPath1);
+        assertTrue(noPath1.isEmpty());
+
     }
-
-
-
 
 }
